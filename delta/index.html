@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=V, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+          background:rgb(27, 12, 69);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          margin-top: 10vh;
+        }
+        svg {
+          border: 1px solid rgb(27, 12, 69);
+        }
+        .redcont{
+            font-size: 50px;
+            color: red;
+            display: flex;
+        }
+        .bluecont{
+            font-size: 50px;
+            color: blue;
+            display: flex;
+        }
+        .currentplayer{
+            font-size: 50px;
+            color: white;
+            display:flex
+        }
+        .chance{
+            color: red;
+        }
+      </style>
+</head>
+<body>
+    <svg id="hex-svg" width="800" height="750"></svg>
+    
+    <div class="scorcebox">
+        <div class="redcont">
+        red: 
+        <div class="redscore"> 0</div>
+        </div><br>
+        <div class="bluecont">
+        blue: 
+        <div class="bluescore"> 0</div></div>
+        <div class="currentplayer">
+        currentplayer: 
+        <div class="chance"> red</div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
