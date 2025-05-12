@@ -4,6 +4,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const centery = 350;
   const radii = [300, 200, 100];
   const layerNames = ["outer", "mid", "inner"];
+  document.getElementById("playBtn").addEventListener("click", resumeCountdown);
+  document.getElementById("pauseBtn").addEventListener("click", pauseCountdown);
+  document.getElementById("resetBtn").addEventListener("click", resetCountdown);
 
   // to get vertices of hexagon
   function getpoints(cx, cy, r) {
@@ -46,7 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const midY = (p1.y + p2.y) / 2;
     const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
     text.setAttribute("x", midX);
-    text.setAttribute("y", midY - 15); // offset a bit above the line
+    text.setAttribute("y", midY - 15);
     text.setAttribute("fill", "white");
     text.setAttribute("font-size", "15");
     text.setAttribute("font-family", "Arial");
@@ -54,7 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
     text.textContent = "1";
     svg.appendChild(text);
   }
-  const circleData = {};
+  const circleId = [];
   //circle
   function drawCircle(x, y, layer, index) {
     const circle = document.createElementNS(
@@ -69,21 +72,15 @@ document.addEventListener("DOMContentLoaded", () => {
     circle.setAttribute("stroke-width", "4");
     svg.appendChild(circle);
 
-    const key = `${layer}-${index}`;
-    circleData[key] = { layer, index, element: circle };
+    circleId.push({ layer, index, element: circle });
   }
-  console.log(circleData);
+  console.log(circleId);
 
-  const weightsMap = {
-    300: [2, 1, 2, 3, 1, 1],
-    200: [4, 6, 5, 4, 6, 5],
-    100: [9, 8, 8, 9, 8, 8],
-  };
+  const numbers = [-2, 2, 6];
 
-  function drawWeights(r) {
+  function drawWeights(r, X, layer) {
     const angle = Math.PI / 3;
-    const weights = weightsMap[r];
-
+    const weights = [];
     for (let i = 0; i < 6; i++) {
       const x1 = centerx + (r - 20) * Math.cos(angle * i);
       const y1 = centery + (r - 20) * Math.sin(angle * i);
@@ -103,10 +100,18 @@ document.addEventListener("DOMContentLoaded", () => {
       text.setAttribute("font-size", "15");
       text.setAttribute("font-family", "Arial");
       text.setAttribute("text-anchor", "middle");
-      text.textContent = weights[i];
+      const value = Math.floor(Math.random() * 3) + r / 100 + X;
+      text.textContent = value;
+      weights.push({
+        initial: { layer, index: i },
+        weight: value,
+        final: { layer, index: (i + 1) % 6 },
+      });
       svg.appendChild(text);
     }
+    return weights;
   }
+  const weightid = [];
 
   const hexLayers = {};
   radii.forEach((r, i) => {
@@ -114,15 +119,30 @@ document.addEventListener("DOMContentLoaded", () => {
     const points = getpoints(centerx, centery, r);
     hexLayers[layer] = points;
     drawHex(points);
-    drawWeights(r);
+    weightid.push(...drawWeights(r, numbers[i], layer));
   });
 
   console.log(hexLayers);
+  console.log(weightid);
 
   for (let i = 0; i < 6; i++) {
-    if (i % 2 === 1) drawConnectingLine(hexLayers.outer[i], hexLayers.mid[i]);
-    else drawConnectingLine(hexLayers.mid[i], hexLayers.inner[i]);
+    if (i % 2 === 1) {
+      drawConnectingLine(hexLayers.outer[i], hexLayers.mid[i]);
+      weightid.push({
+        initial: { layer: "outer", index: i },
+        final: { layer: "mid", index: i },
+        weight: 1,
+      });
+    } else {
+      drawConnectingLine(hexLayers.mid[i], hexLayers.inner[i]);
+      weightid.push({
+        initial: { layer: "mid", index: i },
+        final: { layer: "outer", index: i },
+        weight: 1,
+      });
+    }
   }
+
   radii.forEach((r, i) => {
     const layer = layerNames[i];
     const points = getpoints(centerx, centery, r);
@@ -131,19 +151,41 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let midunlocked = false;
   let innerunlocked = false;
-  // outer to inner
-  function isAllowedToFill(layer) {
-    if (layer === "mid") {
-      return !Object.values(circleData).some(
-        (c) => c.layer === "outer" && c.element.getAttribute("fill") === "grey"
-      );
-    }
-    if (layer === "inner")
-      return !Object.values(circleData).some(
-        (c) => c.layer === "mid" && c.element.getAttribute("fill") === "grey"
-      );
 
-    return true;
+  function unlock(clickedCircle) {
+    if (clickedCircle.layer === "outer") {
+      return true;
+    }
+
+    if (!midunlocked) {
+      const outercircle = circleId.filter((c) => c.layer === "outer");
+      const filledcount = outercircle.filter(
+        (c) => c.element.getAttribute("fill") !== "grey"
+      ).length;
+      if (filledcount === 6) {
+        midunlocked = true;
+      }
+    }
+
+    if (clickedCircle.layer === "mid") {
+      return midunlocked;
+    }
+
+    if (!innerunlocked) {
+      const midcircle = circleId.filter((c) => c.layer === "mid");
+      const filledCount = midcircle.filter(
+        (c) => c.element.getAttribute("fill") !== "grey"
+      ).length;
+      if (filledCount === 6) {
+        innerunlocked = true;
+      }
+    }
+
+    if (clickedCircle.layer === "inner") {
+      return innerunlocked;
+    }
+
+    return false;
   }
 
   let isRED = true;
@@ -156,65 +198,171 @@ document.addEventListener("DOMContentLoaded", () => {
     chance.style.color = isRED ? "red" : "blue";
   }
 
-  function getNeighboringCircles(circleMeta) {
+  function getNeighboringCircles(clickedCircle) {
     const neighbors = [];
-    const sameLayer = Object.values(circleData).filter(
-      (c) => c.layer === circleMeta.layer
-    );
-    if (circleMeta.layer === "mid" && circleMeta.index % 2 === 1) {
-      const match = Object.values(circleData).find(
-        (c) => c.layer === "outer" && c.index === circleMeta.index
+    const sameLayer = circleId.filter((c) => c.layer === clickedCircle.layer);
+    if (clickedCircle.layer === "mid" && clickedCircle.index % 2 === 1) {
+      const match = circleId.find(
+        (c) => c.layer === "outer" && c.index === clickedCircle.index
       );
       if (match) neighbors.push(match);
-    } else if (circleMeta.layer === "inner" && circleMeta.index % 2 === 0) {
-      const match = Object.values(circleData).find(
-        (c) => c.layer === "mid" && c.index === circleMeta.index
+    } else if (
+      clickedCircle.layer === "inner" &&
+      clickedCircle.index % 2 === 0
+    ) {
+      const match = circleId.find(
+        (c) => c.layer === "mid" && c.index === clickedCircle.index
       );
       if (match) neighbors.push(match);
     }
 
-    const prev = sameLayer.find((c) => c.index === (circleMeta.index + 5) % 6);
-    const next = sameLayer.find((c) => c.index === (circleMeta.index + 1) % 6);
+    const prev = sameLayer.find(
+      (c) => c.index === (clickedCircle.index + 5) % 6
+    );
+    const next = sameLayer.find(
+      (c) => c.index === (clickedCircle.index + 1) % 6
+    );
     if (prev) neighbors.push(prev);
     if (next) neighbors.push(next);
 
     return neighbors;
   }
 
-  function handleClick(circleMeta) {
-    const currColor = circleMeta.element.getAttribute("fill");
+  function updateScore() {
+    let redScore = 0;
+    let blueScore = 0;
+
+    weightid.forEach(({ initial, final, weight }) => {
+      const circleA = circleId.find(
+        (c) => c.layer === initial.layer && c.index === initial.index
+      );
+      const circleB = circleId.find(
+        (c) => c.layer === final.layer && c.index === final.index
+      );
+
+      if (circleA && circleB) {
+        const colorA = circleA.element.getAttribute("fill");
+        const colorB = circleB.element.getAttribute("fill");
+
+        if (colorA === colorB && colorA !== "grey") {
+          const intWeight = parseInt(weight);
+
+          if (colorA === "red") {
+            redScore += intWeight;
+          } else if (colorA === "blue") {
+            blueScore += intWeight;
+          }
+        }
+      }
+    });
+
+    document.getElementById("redScore").textContent = redScore;
+    document.getElementById("blueScore").textContent = blueScore;
+  }
+
+  
+  let time = 5 * 60;
+  let countdownInterval;
+
+  const countdown = document.querySelector(".countdown p");
+
+  function updatecountdown() {
+    const minutes = Math.floor(time / 60);
+    let seconds = time % 60;
+    seconds = seconds < 10 ? "0" + seconds : seconds;
+    countdown.innerHTML = ` 0${minutes}:${seconds}`;
+    time--;
+
+    if(time<0 ) clearInterval(countdownInterval);
+  }
+
+  let playerTimer;
+  let timeleft = 30;
+
+  function updateplayertimer() {
+    timeleft = 30;
+    document.querySelector(".timer p").textContent = `time left:${timeleft}s`;
+
+    playerTimer = setInterval(() => {
+      timeleft--;
+      document.querySelector(".timer p").textContent = `time left:${timeleft}s`;
+
+      if (timeleft <= 0) 
+        clearInterval(playerTimer);
+      
+      
+    }, 1000);
+  }
+
+function pauseCountdown(){
+    clearInterval(countdownInterval);
+    clearInterval(playerTimer);
+}
+
+function resumeCountdown(){
+  countdownInterval=setInterval(updatecountdown,1000);
+  updateplayertimer();
+}
+
+function resetCountdown(){
+  clearInterval(countdownInterval);
+  time=5*60;
+  clearInterval(playerTimer);
+  timeleft=30;
+  updatecountdown();
+  circleId.forEach((c)=>{
+     c.element.setAttribute("fill","grey");
+  });
+  
+  document.querySelector("#redScore").textContent="0";
+  document.querySelector("#blueScore").textContent="0";
+  alert("game is restart");
+}
+
+  function handleClick(clickedCircle) {
+    
+   countdownInterval= setInterval(updatecountdown, 1000);
+
+    const isUnlock = unlock(clickedCircle);
+    if (!isUnlock) return;
+
+    const currColor = clickedCircle.element.getAttribute("fill");
     const playerColor = isRED ? "red" : "blue";
 
     const isInitialMoves = (isRED && countR < 4) || (!isRED && countB < 4);
 
     if (isInitialMoves) {
       if (currColor === "grey") {
-        circleMeta.element.setAttribute("fill", playerColor);
+        clickedCircle.element.setAttribute("fill", playerColor);
         if (isRED) countR++;
         else countB++;
         isRED = !isRED;
         updateTurnUI();
+        updateScore();
+        updateplayertimer();
       }
+
       return;
     }
 
-    // After initial moves
     if (currColor !== "grey") return;
 
-    const neighbors = getNeighboringCircles(circleMeta);
+    const neighbors = getNeighboringCircles(clickedCircle);
     const neighborWithPlayerColor = neighbors.find(
       (n) => n.element.getAttribute("fill") === playerColor
     );
 
     if (neighborWithPlayerColor) {
       neighborWithPlayerColor.element.setAttribute("fill", "grey");
-      circleMeta.element.setAttribute("fill", playerColor);
+      clickedCircle.element.setAttribute("fill", playerColor);
       isRED = !isRED;
       updateTurnUI();
+      updateScore();
+      updateplayertimer();
     }
   }
 
-  Object.values(circleData).forEach((c) => {
+  circleId.forEach((c) => {
     c.element.addEventListener("click", () => handleClick(c));
   });
 

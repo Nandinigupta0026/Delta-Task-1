@@ -1,57 +1,136 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=V, initial-scale=1.0">
     <title>Document</title>
     <style>
         body {
-          background:rgb(27, 12, 69);
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          height: 100vh;
-          margin-top: 10vh;
+            background: rgb(27, 12, 69);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin-top: 10vh;
         }
+
         svg {
-          border: 1px solid rgb(27, 12, 69);
+            border: 1px solid rgb(27, 12, 69);
         }
-        .redcont{
+
+        .redcont {
             font-size: 50px;
             color: red;
             display: flex;
         }
-        .bluecont{
+
+        .bluecont {
             font-size: 50px;
             color: blue;
             display: flex;
         }
-        .currentplayer{
+
+        .currentplayer {
             font-size: 50px;
             color: white;
-            display:flex
+            display: flex
         }
-        .chance{
+
+        .chance {
             color: red;
         }
-      </style>
+
+        .countdown {
+            height: 100px;
+            width: 300px;
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            position: absolute;
+            top: 20px;
+            border: none;
+        }
+
+        .countdown p {
+            color: white;
+            font-size: 60px;
+            font-weight: 200;
+            margin: auto;
+        }
+
+        .timer {
+            height: 100px;
+            width: 200px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+        }
+
+        .timer p {
+            color: white;
+            font-size: 30px;
+            font-weight: 100;
+            margin: auto;
+        }
+
+        .controls {
+            position: fixed;
+            top: 40px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .controls button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
+
 <body>
+
+    <div class="countdown">
+        <p>05:00</p>
+    </div>
+
+    <div class="timer">
+        <p> time left:30s</p>
+    </div>
+
+
     <svg id="hex-svg" width="800" height="750"></svg>
-    
+
     <div class="scorcebox">
         <div class="redcont">
-        red: 
-        <div class="redscore"> 0</div>
+            red:
+            <div id="redScore"> 0</div>
         </div><br>
         <div class="bluecont">
-        blue: 
-        <div class="bluescore"> 0</div></div>
+            blue:
+            <div id="blueScore"> 0</div>
+        </div>
         <div class="currentplayer">
-        currentplayer: 
-        <div class="chance"> red</div>
+            currentplayer:
+            <div class="chance"> red</div>
         </div>
     </div>
+
+    <div class="controls">
+        <button id="playBtn"><i class="fas fa-play"></i></button>
+        <button id="pauseBtn"><i class="fas fa-pause"></i></button>
+        <button id="resetBtn"><i class="fas fa-rotate-left"></i></button>
+    </div>
+
     <script src="script.js"></script>
 </body>
+
 </html>
