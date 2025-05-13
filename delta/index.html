@@ -3,11 +3,11 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=V, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Titan's Game</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
-
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <style>
         * {
             box-sizing: border-box;
@@ -25,9 +25,20 @@
             color: white;
         }
 
-        svg {
+        @media(max-width:768px) {
+            body {
+                flex-direction: column;
+                height: auto;
+                padding: 20px;
+            }
+        }
 
-            margin-top: 80px;
+        svg#hex-svg {
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+
+            margin-top: 40px;
         }
 
         .countdown,
@@ -40,17 +51,38 @@
 
         .scorcebox {
             margin-top: 20px;
-            background-color: #2f1a5c;
             padding: 20px;
             border-radius: 15px;
-            box-shadow: 0 0 10px #00000055;
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            gap: 20px;
+            
         }
+
+        @media (max-width:768px) {
+            .scorcebox {
+                font-size: 16px;
+                padding: 15px;
+                margin-top: 10px;
+            }
+
+            .redcont,
+            .bluecont,
+            .currentplayer {
+                font-size: 22px;
+            }
+        }
+
+
 
         .redcont,
         .bluecont,
         .currentplayer {
-            font-size: 35px;
+            font-size: clamp(25px,3vw,35px);
+            width:100px;
             margin: 10px 0;
+             box-shadow: 0 0 10px #00000055;
         }
 
         .redcont #redScore {
@@ -65,21 +97,24 @@
         }
 
         .currentplayer {
-            font-size: 35px;
+        
             color: white;
-            display: flex
+            display: flex;
+            flex-direction: column;
+        
         }
 
-        .chance {
+        #chance {
             color: #f04e4e;
-            margin-left: 8px;
+            margin-left: 0;
+            display:block;
         }
 
         .countdown {
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 48px;
+            font-size: clamp(24px, 4vw, 48px);
             font-weight: bold;
             background-color: #2f1a5c;
             padding: 10px 20px;
@@ -97,7 +132,7 @@
             padding: 10 px, 20px;
             box-shadow: 0 0 10px #00000055;
             border-radius: 10px;
-            font-size: 24px;
+            font-size: clamp(24px, 4vw, 48px);
             position: fixed;
             top: 20px;
             right: 20px;
@@ -110,12 +145,31 @@
             margin: auto;
         }
 
+
+        @media (max-width: 768px) {
+
+            .countdown,
+            .timer {
+                position: static;
+                margin-bottom: 15px;
+                text-align: center;
+            }
+        }
+
         .controls {
 
             top: 40px;
             left: 20px;
-
+            flex-wrap: wrap;
             gap: 10px;
+        }
+
+        @media(max-width:768px) {
+            .controls {
+                position: static;
+                justify-content: center;
+                margin: 10px 0;
+            }
         }
 
         .controls button {
@@ -131,6 +185,10 @@
 
         .controls button:hover {
             background-color: #ffffff44;
+        }
+
+        circle {
+            cursor: pointer;
         }
 
         #winnerBox {
@@ -170,7 +228,7 @@
         }
 
         .winnerMessage {
-            font-size: 50px;
+            font-size: clamp(30px, 5vw, 50px);
             font-weight: 100;
             margin-bottom: 30px;
 
@@ -181,7 +239,7 @@
             background-color: #f0f0f0;
         }
     </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
 </head>
 
 <body>
@@ -195,7 +253,7 @@
     </div>
 
 
-    <svg id="hex-svg" width="800" height="750"></svg>
+     <svg id="hex-svg" viewBox="0 0 800 750" preserveAspectRatio="xMidYMid meet"></svg>
 
     <div class="scorcebox">
         <div class="redcont">
@@ -207,8 +265,8 @@
             <div id="blueScore"> 0</div>
         </div>
         <div class="currentplayer">
-            currentplayer:
-            <div class="chance"> red</div>
+           <span>Turn:</span>
+            <span id="chance">red</span>
         </div>
     </div>
 

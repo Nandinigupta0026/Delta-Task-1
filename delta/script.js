@@ -193,7 +193,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   let isRED = true;
-  const chance = document.querySelector(".chance");
+  const chance = document.querySelector("#chance");
   let countB = 0;
   let countR = 0;
 
@@ -288,7 +288,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function updateplayertimer() {
     clearInterval(playerTimer);
-   
+    timeleft = 30;
     const timeDisplay = document.querySelector(".timer p");
     const currentPlayer = isRED ? "Red" : "Blue";
     timeDisplay.textContent = `${currentPlayer}'s time left:${timeleft}s`;
