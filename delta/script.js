@@ -7,6 +7,10 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("playBtn").addEventListener("click", resumeCountdown);
   document.getElementById("pauseBtn").addEventListener("click", pauseCountdown);
   document.getElementById("resetBtn").addEventListener("click", resetCountdown);
+  document.getElementById("newGameBtn").addEventListener("click", () => {
+    document.getElementById("winnerBox").style.display = "none";
+    resetCountdown();
+  });
 
   // to get vertices of hexagon
   function getpoints(cx, cy, r) {
@@ -137,12 +141,12 @@ document.addEventListener("DOMContentLoaded", () => {
       drawConnectingLine(hexLayers.mid[i], hexLayers.inner[i]);
       weightid.push({
         initial: { layer: "mid", index: i },
-        final: { layer: "outer", index: i },
+        final: { layer: "inner", index: i },
         weight: 1,
       });
     }
   }
-
+  console.log(weightid);
   radii.forEach((r, i) => {
     const layer = layerNames[i];
     const points = getpoints(centerx, centery, r);
@@ -260,7 +264,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("blueScore").textContent = blueScore;
   }
 
-  
   let time = 5 * 60;
   let countdownInterval;
 
@@ -273,55 +276,107 @@ document.addEventListener("DOMContentLoaded", () => {
     countdown.innerHTML = ` 0${minutes}:${seconds}`;
     time--;
 
-    if(time<0 ) clearInterval(countdownInterval);
+    if (time < 0) {
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+      checkForWinner();
+    }
   }
 
   let playerTimer;
   let timeleft = 30;
 
   function updateplayertimer() {
-    timeleft = 30;
-    document.querySelector(".timer p").textContent = `time left:${timeleft}s`;
+    clearInterval(playerTimer);
+   
+    const timeDisplay = document.querySelector(".timer p");
+    const currentPlayer = isRED ? "Red" : "Blue";
+    timeDisplay.textContent = `${currentPlayer}'s time left:${timeleft}s`;
 
     playerTimer = setInterval(() => {
       timeleft--;
-      document.querySelector(".timer p").textContent = `time left:${timeleft}s`;
+      timeDisplay.textContent = `${currentPlayer}'s time left:${timeleft}s`;
 
-      if (timeleft <= 0) 
+      if (timeleft <= 0) {
         clearInterval(playerTimer);
-      
-      
+        alert(`${currentPlayer}'s time is up!`);
+
+        isRED = !isRED;
+        updateTurnUI();
+        updateplayertimer();
+      }
     }, 1000);
   }
 
-function pauseCountdown(){
+  function pauseCountdown() {
     clearInterval(countdownInterval);
     clearInterval(playerTimer);
-}
+    countdownInterval = null;
+    playerTimer = null;
+  }
 
-function resumeCountdown(){
-  countdownInterval=setInterval(updatecountdown,1000);
-  updateplayertimer();
-}
+  function resumeCountdown() {
+    if (!countdownInterval)
+      countdownInterval = setInterval(updatecountdown, 1000);
 
-function resetCountdown(){
-  clearInterval(countdownInterval);
-  time=5*60;
-  clearInterval(playerTimer);
-  timeleft=30;
-  updatecountdown();
-  circleId.forEach((c)=>{
-     c.element.setAttribute("fill","grey");
-  });
-  
-  document.querySelector("#redScore").textContent="0";
-  document.querySelector("#blueScore").textContent="0";
-  alert("game is restart");
-}
+    if (!playerTimer) updateplayertimer();
+  }
+
+  function resetCountdown() {
+    clearInterval(countdownInterval);
+    clearInterval(playerTimer);
+
+    time = 5 * 60;
+    timeleft = 30;
+
+    updatecountdown();
+    countdownInterval = setInterval(updatecountdown, 1000);
+
+    updateplayertimer();
+    circleId.forEach((c) => {
+      c.element.setAttribute("fill", "grey");
+    });
+
+    countR = 0;
+    countB = 0;
+    isRED = true;
+    midunlocked = false;
+    innerunlocked = false;
+    updateTurnUI();
+
+    document.querySelector("#redScore").textContent = "0";
+    document.querySelector("#blueScore").textContent = "0";
+    alert("game is restart");
+  }
+
+  function checkForWinner() {
+    const redScore = parseInt(document.getElementById("redScore").textContent);
+    const blueScore = parseInt(
+      document.getElementById("blueScore").textContent
+    );
+
+    const winnerMessage = document.getElementById("winnerMessage");
+
+    let message = "";
+
+    if (redScore > blueScore) {
+      message = "Red wins!";
+    } else if (blueScore > redScore) {
+      message = "Blue wins";
+    } else {
+      message = "It's a tie";
+    }
+
+    winnerMessage.textContent = message;
+    winnerMessage.style.color = "white";
+
+    document.getElementById("winnerBox").style.display = "flex";
+  }
 
   function handleClick(clickedCircle) {
-    
-   countdownInterval= setInterval(updatecountdown, 1000);
+    if (!countdownInterval) {
+      countdownInterval = setInterval(updatecountdown, 1000);
+    }
 
     const isUnlock = unlock(clickedCircle);
     if (!isUnlock) return;
@@ -359,6 +414,16 @@ function resetCountdown(){
       updateTurnUI();
       updateScore();
       updateplayertimer();
+    }
+
+    const innerFilled = circleId
+      .filter((c) => c.layer === "inner")
+      .every((c) => c.element.getAttribute("fill") !== "grey");
+
+    if (innerFilled) {
+      clearInterval(countdownInterval);
+      clearInterval(playerTimer);
+      checkForWinner();
     }
   }
 
