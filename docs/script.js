@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     circleId.push({ layer, index, element: circle });
   }
-  console.log(circleId);
+ // console.log(circleId);
 
   const numbers = [-2, 2, 6];
 
@@ -126,8 +126,8 @@ document.addEventListener("DOMContentLoaded", () => {
     weightid.push(...drawWeights(r, numbers[i], layer));
   });
 
-  console.log(hexLayers);
-  console.log(weightid);
+ // console.log(hexLayers);
+ // console.log(weightid);
 
   for (let i = 0; i < 6; i++) {
     if (i % 2 === 1) {
@@ -245,17 +245,14 @@ document.addEventListener("DOMContentLoaded", () => {
         neighborWithPlayerColor.forEach((n) => {
           n.element.setAttribute("stroke", "white");
           n.element.setAttribute("stroke-width", "4");
-          n.element.removeEventListener("click", handleChoice);
+          n.element.removeEventListener("click", n.handleChoiceRef);
         });
 
         neighbor.element.setAttribute("fill", "grey");
         clickedCircle.element.setAttribute("fill", playerColor);
-        isRED = !isRED;
-        updateTurnUI();
-        updateScore();
-        updateplayertimer();
+       updateGame();
       }
-
+       neighbor.handleChoiceRef=handleChoice
       neighbor.element.addEventListener("click", handleChoice);
     });
   }
@@ -401,6 +398,27 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("winnerBox").style.display = "flex";
   }
 
+  function checkGameEnd() {
+    const innerFilled = circleId
+      .filter((c) => c.layer === "inner")
+      .every((c) => c.element.getAttribute("fill") !== "grey");
+
+    if (innerFilled) {
+      clearInterval(countdownInterval);
+      clearInterval(playerTimer);
+      checkForWinner();
+    }
+  }
+
+  function updateGame(){
+     isRED = !isRED;
+        updateTurnUI();
+        updateScore();
+        updateplayertimer();
+        checkGameEnd();
+
+  }
+
   function handleClick(clickedCircle) {
     if (!countdownInterval) {
       countdownInterval = setInterval(updatecountdown, 1000);
@@ -419,10 +437,7 @@ document.addEventListener("DOMContentLoaded", () => {
         clickedCircle.element.setAttribute("fill", playerColor);
         if (isRED) countR++;
         else countB++;
-        isRED = !isRED;
-        updateTurnUI();
-        updateScore();
-        updateplayertimer();
+       updateGame();
       }
 
       return;
@@ -439,25 +454,13 @@ document.addEventListener("DOMContentLoaded", () => {
     else if (neighborWithPlayerColor.length === 1) {
       neighborWithPlayerColor[0].element.setAttribute("fill", "grey");
       clickedCircle.element.setAttribute("fill", playerColor);
-      isRED = !isRED;
-      updateTurnUI();
-      updateScore();
-      updateplayertimer();
-      return;
+     updateGame();
       
     } else if (neighborWithPlayerColor.length > 1) {
       chooseNeighbour(neighborWithPlayerColor, clickedCircle, playerColor);
     }
 
-    const innerFilled = circleId
-      .filter((c) => c.layer === "inner")
-      .every((c) => c.element.getAttribute("fill") !== "grey");
-
-    if (innerFilled) {
-      clearInterval(countdownInterval);
-      clearInterval(playerTimer);
-      checkForWinner();
-    }
+    
   }
 
   circleId.forEach((c) => {
