@@ -232,6 +232,34 @@ document.addEventListener("DOMContentLoaded", () => {
     return neighbors;
   }
 
+  function chooseNeighbour(
+    neighborWithPlayerColor,
+    clickedCircle,
+    playerColor
+  ) {
+    neighborWithPlayerColor.forEach((neighbor) => {
+      neighbor.element.setAttribute("stroke", "yellow");
+      neighbor.element.setAttribute("stroke-width", 6);
+
+      function handleChoice() {
+        neighborWithPlayerColor.forEach((n) => {
+          n.element.setAttribute("stroke", "white");
+          n.element.setAttribute("stroke-width", "4");
+          n.element.removeEventListener("click", handleChoice);
+        });
+
+        neighbor.element.setAttribute("fill", "grey");
+        clickedCircle.element.setAttribute("fill", playerColor);
+        isRED = !isRED;
+        updateTurnUI();
+        updateScore();
+        updateplayertimer();
+      }
+
+      neighbor.element.addEventListener("click", handleChoice);
+    });
+  }
+
   function updateScore() {
     let redScore = 0;
     let blueScore = 0;
@@ -403,17 +431,22 @@ document.addEventListener("DOMContentLoaded", () => {
     if (currColor !== "grey") return;
 
     const neighbors = getNeighboringCircles(clickedCircle);
-    const neighborWithPlayerColor = neighbors.find(
+    const neighborWithPlayerColor = neighbors.filter(
       (n) => n.element.getAttribute("fill") === playerColor
     );
 
-    if (neighborWithPlayerColor) {
-      neighborWithPlayerColor.element.setAttribute("fill", "grey");
+    if (neighborWithPlayerColor.length === 0) return;
+    else if (neighborWithPlayerColor.length === 1) {
+      neighborWithPlayerColor[0].element.setAttribute("fill", "grey");
       clickedCircle.element.setAttribute("fill", playerColor);
       isRED = !isRED;
       updateTurnUI();
       updateScore();
       updateplayertimer();
+      return;
+      
+    } else if (neighborWithPlayerColor.length > 1) {
+      chooseNeighbour(neighborWithPlayerColor, clickedCircle, playerColor);
     }
 
     const innerFilled = circleId
